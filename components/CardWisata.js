@@ -1,130 +1,94 @@
 import React from 'react';
-import {View, Text, Image, StyleSheet} from 'react-native';
-import { Card, CardTitle, CardContent, CardAction, CardButton, CardImage } from 'react-native-cards';
-import {INIWISATA_TUA, WARNA_RATING_ON} from "../color";
-import Icon from 'react-native-vector-icons/Ionicons';
-import moment from 'moment';
-
-const hari = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
-const dateNow = new Date();
+import {View, Text, StyleSheet} from 'react-native';
+import { Card, CardTitle, CardContent, CardAction, CardButton, CardImage} from 'react-native-cards';
+import {iniwisata_primary_dark, iniwisata_star_active, iniwisata_star_deactive} from "../color";
+import {connect} from 'react-redux';
+import {fetchAll, fetchCommentAble} from "../redux/actions/wisataOpen";
+import StarRating from 'react-native-star-rating';
+import IconFA from 'react-native-vector-icons/FontAwesome'
 
 const styles = StyleSheet.create({
     card: {
-        marginHorizontal: 12,
-        marginVertical: 7
+        marginHorizontal: 10,
     },
-    cardTitleStyle: {
-        paddingTop: 0,
-        margin: 0
+    ratingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center'
     },
-    ratingStyle: {
-        textShadowColor: 'black',
-        textShadowOffset: {width: 1, height: 1},
-    },
-    bukaTutup: {
-        borderRadius: 10,
-        padding: 2,
-        paddingHorizontal: 8,
-        height: 25,
-        marginHorizontal: 15,
-        marginTop: 2
-    },
-    bukaTutupText: {
-        fontSize: 15,
-        color: 'white',
+    contentContainer: {
+        flexDirection: 'row',
+        alignItems: 'center'
     }
 });
 
-const Badge = (props) => {
-    if (props.status === 'buka') {
-        return (
-            <View style={[styles.bukaTutup, {backgroundColor: 'green'}]}>
-                <Text style={styles.bukaTutupText}>BUKA</Text>
-            </View>
-        );
-    } else {
-        return (
-            <View style={[styles.bukaTutup, {backgroundColor: 'red'}]}>
-                <Text style={styles.bukaTutupText}>TUTUP</Text>
-            </View>
-        );
+const RatingWisata = (props) => (
+    <View style={styles.ratingContainer}>
+        <IconFA name="circle" size={3} style={{marginHorizontal: 5}}/>
+        <Text>{props.rating.toFixed(2)}&nbsp;</Text>
+        <StarRating
+            disabled={true}
+            rating={Math.round(props.rating)}
+            starSize={14}
+            emptyStar='star'
+            emptyStarColor={iniwisata_star_deactive}
+            fullStarColor={iniwisata_star_active}
+        />
+    </View>
+);
+
+class CardWisata extends React.Component {
+    async _pressSelengkapnya() {
+        await this.props.navigation.navigate({
+            routeName: 'Detail',
+            key: 'listWisata'
+        });
+        await this.props.closeSearch();
+        await this.props.fetchCommentAble(this.props.id, this.props.user.id);
+        this.props.fetchAll(this.props.id);
     }
-};
 
-const RatingWisata = (props) => props.rating !== null ? (
-    <Text>
-        <Icon name="md-star" size={35} color={WARNA_RATING_ON} style={styles.ratingStyle} />
-        &nbsp;{props.rating.toFixed(2)}
-    </Text>
-) : null;
-
-const BukaTutup = (props) => {
-    const hariIni = hari[dateNow.getDay()];
-    if (props[hariIni] === '24 Jam') {
-        return (<Badge status="buka"/>);
-    } else {
-        if (cekKondisi(props[hariIni])) {
-            return (<Badge status="buka"/>);
-        } else {
-            return (<Badge status="tutup"/>);
-        }
-    }
-};
-
-const cekKondisi = (waktuOperasi) => {
-    const jamNow = moment().format('HH.mm');
-    const hilangSpasi = waktuOperasi.split(' ').join('');
-    const mulaiSampai = hilangSpasi.split('-');
-
-    const timeNow = moment.unix(jamNow, 'HH.mm').valueOf();
-    const timeBuka = moment.unix(mulaiSampai[0], 'HH.mm').valueOf();
-    const timeTutup = moment.unix(mulaiSampai[1], 'HH.mm').valueOf();
-
-    if (timeNow >= timeBuka && timeNow <= timeTutup) {
-        return true;
-    } else {
-        return false;
-    }
-};
-
-export default class CardWisata extends React.Component {
     render() {
         return (
             <Card style={styles.card}>
-                <CardImage
-                    source={{uri: `http://10.0.2.2:3030/wisata/thumbnail/${this.props.gambar}`}}
-                    title={<RatingWisata rating={this.props.rating}/>}
-                />
-                <View style={{flexDirection: 'row'}}>
-                    <CardTitle
-                        title={this.props.nama_tempat.toUpperCase()}
-                        style={styles.cardTitleStyle}
-                    />
-                    <BukaTutup {...this.props} />
-                </View>
-                <CardContent text={this.props.alamat} />
-                <CardAction
-                    separator={true}
-                    inColumn={false}
-                >
+                <CardImage source={{uri: this.props.gambar}}/>
+                <CardTitle title={this.props.nama_tempat.toUpperCase()} style={{
+                    marginTop: -10
+                }}/>
+                <CardContent>
+                    <View style={styles.contentContainer}>
+                        <Text>
+                            {this.props.tiket_masuk == 0 ? 'Gratis' : `Rp. ${this.props.tiket_masuk.toLocaleString()}`}
+                        </Text>
+                        <IconFA name="circle" size={3} style={{marginHorizontal: 5}}/>
+                        <Text style={{color: this.props.buka ? 'green' : 'red'}}>
+                            {this.props.buka ? 'Buka' : 'Tutup'}&nbsp;
+                        </Text>
+                        <Text>
+                            ({this.props.jam_buka.trim()})
+                        </Text>
+                        {this.props.rating == null ? <RatingWisata rating={0}/> : <RatingWisata rating={this.props.rating}/>}
+                    </View>
+                    <Text>{this.props.alamat}</Text>
+                </CardContent>
+                <CardAction separator={true} inColumn={false}>
                     <CardButton
-                        onPress={() => {this.props.navigation.navigate({
-                            routeName: 'Detail',
-                            params: {
-                                nama_tempat: this.props.nama_tempat,
-                                alamat: this.props.alamat,
-                                gambar: this.props.gambar,
-                                id: this.props.id,
-                                lat: this.props.lat,
-                                lng: this.props.lng
-                            },
-                            key: 'listWisata'
-                        })}}
+                        onPress={this._pressSelengkapnya.bind(this)}
                         title="Selengkapnya"
-                        color={INIWISATA_TUA}
+                        color={iniwisata_primary_dark}
                     />
                 </CardAction>
             </Card>
         );
     }
 }
+
+const mapStateToProps = state => ({
+    user: state.user
+});
+
+const mapDispatchToProps = dispatch => ({
+    fetchAll: id_wisata => dispatch(fetchAll(id_wisata)),
+    fetchCommentAble: (id_wisata, id_user) => dispatch(fetchCommentAble(id_wisata, id_user))
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(CardWisata);

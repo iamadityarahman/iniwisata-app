@@ -31,12 +31,13 @@ export const setLocalString = (key, value) => {
 };
 
 export const getLocalString = key => {
-    let string =  realm.objects(LOCALSTRING);
-    if (string) {
-        for (let data of string) {
-            return data.value;
-        }
+    let data =  realm.objects(LOCALSTRING).filtered(`key = '${key}'`);
+    if (data.length > 0) {
+        return data[0].value;
+    } else {
+        return null;
     }
+
 };
 
 export const clearLocalString = () => {

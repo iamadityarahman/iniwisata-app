@@ -1,11 +1,13 @@
 import {createStore, combineReducers, applyMiddleware} from 'redux';
 import reduxThunk from 'redux-thunk';
-import {wisata} from "./reducers/wisata";
-import {galeri} from "./reducers/galeri";
+import {wisataList} from "./reducers/wisataList";
+import {wisataOpen} from "./reducers/wisataOpen";
+import {user} from "./reducers/user";
 
 const reducers = combineReducers({
-    wisata,
-    galeri
+    wisataList,
+    wisataOpen,
+    user
 });
 
 const configureStore = (initialState = {}) => {
@@ -14,15 +16,6 @@ const configureStore = (initialState = {}) => {
         initialState,
         applyMiddleware(reduxThunk)
     );
-
-    if (module.hot) {
-        // Enable Webpack hot module replacement for reducers
-        module.hot.accept(reducers, () => {
-            const nextRootReducer = reducers;
-            store.replaceReducer(nextRootReducer);
-        });
-    }
-
     return store;
 };
 

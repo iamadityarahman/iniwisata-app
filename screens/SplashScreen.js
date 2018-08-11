@@ -1,16 +1,18 @@
 import React from 'react';
 import axios from 'axios';
-import {View, Image, StatusBar, ToastAndroid} from 'react-native';
+import {View, Image, StatusBar, ToastAndroid, StyleSheet} from 'react-native';
 import {clearLocalString, getLocalString} from "../realm/LocalString";
-import {INIWISATA_MUDA} from "../color";
+import {iniwisata_primary} from "../color";
 import {DotIndicator} from 'react-native-indicators';
+import {connect} from 'react-redux';
+import {fetchDataUser} from "../redux/actions/user";
+
+const TOKEN = getLocalString('token');
 
 class SplashScreen extends React.Component {
     constructor(props) {
         super(props);
-        setTimeout(() => {
-            this.cekLogin();
-        }, 2000);
+        this.cekLogin();
     }
 
     cekLogin() {
@@ -23,9 +25,9 @@ class SplashScreen extends React.Component {
 
     async cekSessionExp() {
         try {
-            const token = getLocalString('token');
-            const verifyToken = await axios.post('/iniwisata/token', {token});
+            const verifyToken = await axios.post('/iniwisata/token', {token: TOKEN});
             if (verifyToken) {
+                await this.props.fetchDataUser(TOKEN);
                 this.props.navigation.navigate('AppDrawer');
             }
         } catch (e) {
@@ -37,24 +39,16 @@ class SplashScreen extends React.Component {
 
     render() {
         return (
-            <View style={{
-                flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: INIWISATA_MUDA
-            }}>
+            <View style={styles.container}>
                 <StatusBar
                     barStyle="light-content"
-                    backgroundColor={INIWISATA_MUDA}
+                    backgroundColor={iniwisata_primary}
                 />
                 <Image
                     source={require('../img/iniwisata-logo-white.png')}
-                    style={{
-                        width: 150,
-                        height: 150
-                    }}
+                    style={{width: 150, height: 150}}
                 />
-                <View style={{width: 100, height: 100, marginTop: 20}}>
+                <View style={styles.loadingIndicator}>
                     <DotIndicator
                         color="white"
                         size={10}
@@ -67,4 +61,26 @@ class SplashScreen extends React.Component {
     }
 }
 
-export default SplashScreen;
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: iniwisata_primary
+    },
+    loadingIndicator: {
+        width: 100,
+        height: 100,
+        marginTop: 20
+    }
+});
+
+const mapStateToProps = state => ({
+    user: state.user
+});
+
+const mapDispatchToProps = dispatch => ({
+    fetchDataUser:token => dispatch(fetchDataUser(token))
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(SplashScreen);

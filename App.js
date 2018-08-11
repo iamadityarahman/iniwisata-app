@@ -5,7 +5,8 @@ import {
     createStackNavigator,
     createSwitchNavigator,
     createDrawerNavigator,
-    NavigationActions
+    NavigationActions,
+    createBottomTabNavigator
 } from 'react-navigation';
 import SignInScreen from "./screens/SignInScreen";
 import BerandaScreen from "./screens/BerandaScreen";
@@ -13,13 +14,15 @@ import ProfileScreen from "./screens/ProfileScreen";
 import DrawerMenu from "./components/DrawerMenu";
 import {Provider} from 'react-redux';
 import store from './redux/store';
-import {INIWISATA_MUDA, INIWISATA_TUA} from "./color";
+import {iniwisata_primary, iniwisata_primary_dark} from "./color";
 import DetailScreen from "./screens/DetailScreen";
-import {createMaterialBottomTabNavigator} from 'react-navigation-material-bottom-tabs';
 import MapsScreen from "./screens/MapsScreen";
 import GaleriScreen from "./screens/GaleriScreen";
 import SplashScreen from "./screens/SplashScreen";
 import LogOutScreen from "./screens/LogOutScreen";
+import RegistrasiScreen from "./screens/RegistrasiScreen";
+import UlasanScreen from "./screens/UlasanScreen";
+import TambahUlasanScreen from "./screens/TambahUlasanScreen";
 
 export const detailBackAction = NavigationActions.back({
     key: 'listWisata'
@@ -27,37 +30,52 @@ export const detailBackAction = NavigationActions.back({
 
 const AuthStack = createStackNavigator(
     {
-        SignIn: SignInScreen
+        SignIn: SignInScreen,
+        Registrasi: RegistrasiScreen
     },
     {
-        headerMode: 'none'
+        headerMode: 'none',
+        initialRouteName: 'SignIn'
     }
 );
 
-const TabDetail = createMaterialBottomTabNavigator(
+const TabDetail = createBottomTabNavigator(
     {
         Detail: DetailScreen,
+        Ulasan: UlasanScreen,
         Galeri: GaleriScreen,
         Maps: MapsScreen
     },
     {
         shifting: true,
         backBehavior: 'none',
-        barStyle: {
-            backgroundColor: '#ff2725'
+        tabBarOptions: {
+            activeTintColor: iniwisata_primary,
+            inactiveTintColor: 'rgba(81, 77, 70, 0.7)',
+            labelStyle: {
+                fontWeight: 'bold'
+            },
+            tabStyle: {
+                backgroundColor: 'white'
+            }
         }
     }
 );
 
 const BerandaStack = createStackNavigator({
     Beranda: BerandaScreen,
-    Detail: TabDetail
+    Detail: TabDetail,
+    TambahUlasan: TambahUlasanScreen
 },{
+    initialRouteName: 'Beranda',
     headerMode: 'none'
 });
 
 const ProfileStack = createStackNavigator({
     Profile: ProfileScreen
+},{
+    initialRouteName: 'Profile',
+    headerMode: 'none'
 });
 
 const AppDrawer = createDrawerNavigator(
@@ -91,12 +109,13 @@ const AppDrawer = createDrawerNavigator(
         }
     },
     {
+        headerMode: 'none',
         contentComponent: DrawerMenu,
         contentOptions: {
-            activeTintColor: INIWISATA_TUA,
+            activeTintColor: iniwisata_primary_dark,
             inactiveTintColor: 'black'
         },
-        initialRouteName: 'Profile'
+        initialRouteName: 'Beranda'
     }
 );
 
@@ -107,14 +126,14 @@ const PrimaryStack = createSwitchNavigator(
         AppDrawer: AppDrawer
     },
     {
-        initialRouteName: 'AppDrawer',
+        initialRouteName: 'Splash',
     }
 );
 
 const uiTheme = {
     toolbar: {
         container: {
-            backgroundColor: INIWISATA_MUDA
+            backgroundColor: iniwisata_primary
         }
     }
 };

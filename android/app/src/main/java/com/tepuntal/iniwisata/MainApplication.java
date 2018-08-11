@@ -3,6 +3,7 @@ package com.tepuntal.iniwisata;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.reactnative.ivpusic.imagepicker.PickerPackage;
 import io.realm.react.RealmReactPackage;
 import com.airbnb.android.react.maps.MapsPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
@@ -26,9 +27,10 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            new RealmReactPackage(),
-              new VectorIconsPackage(),
-              new MapsPackage()
+          new PickerPackage(),
+          new RealmReactPackage(),
+          new VectorIconsPackage(),
+          new MapsPackage()
       );
     }
 

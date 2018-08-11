@@ -4,40 +4,74 @@ import {
     SafeAreaView,
     StyleSheet,
     Image,
-    StatusBar
+    StatusBar,
+    Text
 } from 'react-native';
 import LoginForm from "../components/LoginForm";
-import {INIWISATA_MUDA} from "../color";
+import {iniwisata_primary} from "../color";
+import {SkypeIndicator} from 'react-native-indicators';
 
-export default class SignInScreen extends React.Component {
+class SignInScreen extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            isLoading: false
+        }
+    }
+
+    setIsLoading() {
+        this.setState({isLoading: !this.state.isLoading});
+    }
+
     render() {
-        return (
-            <SafeAreaView style={styles.container}>
-                <StatusBar
-                    barStyle="light-content"
-                    backgroundColor={INIWISATA_MUDA}
-                />
-                <View style={styles.loginContainer}>
-                    <Image
-                        resizeMode="contain"
-                        style={styles.logo}
-                        source={require('../img/iniwisata-text-white.png')}
+        if (this.state.isLoading) {
+            return (
+                <View style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: iniwisata_primary
+                }}>
+                    <StatusBar
+                        barStyle="light-content"
+                        backgroundColor={iniwisata_primary}
+                    />
+                    <SkypeIndicator
+                        color="white"
+                        size={50}
                     />
                 </View>
-                <View style={styles.formContainer}>
-                    <LoginForm
-                        navigation={this.props.navigation}
+            );
+        } else {
+            return (
+                <SafeAreaView style={styles.container}>
+                    <StatusBar
+                        barStyle="light-content"
+                        backgroundColor={iniwisata_primary}
                     />
-                </View>
-            </SafeAreaView>
-        );
+                    <View style={styles.loginContainer}>
+                        <Image
+                            resizeMode="contain"
+                            style={styles.logo}
+                            source={require('../img/iniwisata-text-white.png')}
+                        />
+                    </View>
+                    <View style={styles.formContainer}>
+                        <LoginForm
+                            setIsLoading={this.setIsLoading.bind(this)}
+                            navigation={this.props.navigation}
+                        />
+                    </View>
+                </SafeAreaView>
+            );
+        }
     }
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FF4A4A'
+        backgroundColor: iniwisata_primary
     },
     loginContainer: {
         alignItems: 'center',
@@ -53,3 +87,5 @@ const styles = StyleSheet.create({
         margin: 20
     }
 });
+
+export default SignInScreen;

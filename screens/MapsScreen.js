@@ -4,51 +4,32 @@ import {Toolbar} from 'react-native-material-ui';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {detailBackAction} from "../App";
 import MapView, {Marker} from 'react-native-maps';
-import MapViewDirections from 'react-native-maps-directions';
+import {connect} from 'react-redux';
+import MapViewDirection from 'react-native-maps-directions';
+import {GOOGLEMAPSKEYAPI} from "../keyToken";
 
 const {width, height} = Dimensions.get('window');
 
-const styles = StyleSheet.create({
-    container: {
-        ...StyleSheet.absoluteFillObject,
-        width: width,
-        height: height-130,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    map: {
-        ...StyleSheet.absoluteFillObject,
-    },
-});
-
 class MapsScreen extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            nama_tempat: this.props.navigation.state.params.nama_tempat,
-
-            lat: this.props.navigation.state.params.lat,
-            lng: this.props.navigation.state.params.lng
-        };
-    }
-
     static navigationOptions = ({navigation}) => ({
-        title: 'Peta Lokasi',
+        title: 'LOKASI',
         tabBarIcon: ({tintColor}) => (
             <Icon name="md-compass" size={25} color={tintColor}/>
         )
     });
 
     render() {
-        const mapLat = parseFloat(this.state.lat);
-        const mapLng = parseFloat(this.state.lng);
+        const {detailWisata} = this.props;
+
+        const mapLat = parseFloat(detailWisata.lat);
+        const mapLng = parseFloat(detailWisata.lng);
         const marker = {latitude: mapLat, longitude: mapLng};
 
         return (
             <View>
                 <Toolbar
                     leftElement="arrow-back"
-                    centerElement={this.state.nama_tempat.toUpperCase()}
+                    centerElement={detailWisata.nama_tempat.toUpperCase()}
                     onLeftElementPress={() => {this.props.navigation.dispatch(detailBackAction)}}
                 />
                 <View>
@@ -65,7 +46,7 @@ class MapsScreen extends React.Component {
                         >
                             <Marker
                                 coordinate={marker}
-                                title={this.state.nama_tempat.toUpperCase()}
+                                title={detailWisata.nama_tempat.toUpperCase()}
                             />
                         </MapView>
                     </View>
@@ -75,4 +56,21 @@ class MapsScreen extends React.Component {
     }
 }
 
-export default MapsScreen;
+const styles = StyleSheet.create({
+    container: {
+        ...StyleSheet.absoluteFillObject,
+        width: width,
+        height: height-130,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    map: {
+        ...StyleSheet.absoluteFillObject,
+    }
+});
+
+const mapStateToProps = state => ({
+    detailWisata: state.wisataOpen.detailWisata
+});
+
+export default connect(mapStateToProps)(MapsScreen);

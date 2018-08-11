@@ -1,18 +1,47 @@
 import React from 'react';
 import {View, Text, StyleSheet, Image, StatusBar} from 'react-native';
 import {DrawerItems} from 'react-navigation';
-import {getLocalString} from "../realm/LocalString";
-import jwtdecode from 'jwt-decode';
-import {STATUSBAR_APLIKASI} from "../color";
+import {iniwisata_primary_dark} from "../color";
+import {connect} from 'react-redux';
+
+class DrawerMenu extends React.Component {
+    render() {
+        const {user} = this.props;
+        return (
+            <View>
+                <StatusBar
+                    barStyle="light-content"
+                    backgroundColor={iniwisata_primary_dark}
+                />
+                <View
+                    style={styles.headerContainer}
+                >
+                    <Image
+                        source={require('../img/header_drawer.jpg')}
+                        style={styles.headerBackground}
+                    />
+                    <View style={styles.userInfoContainer}>
+                        <Image
+                            source={{uri: user.img}}
+                            style={styles.userProfile}
+                        />
+                        <Text style={styles.userName}>{user.nama}</Text>
+                        <Text style={styles.userMail}>{user.email}</Text>
+                    </View>
+                </View>
+                <DrawerItems {...this.props} />
+            </View>
+        );
+    }
+}
 
 const styles = StyleSheet.create({
     headerContainer: {
         height: 120,
         alignItems: 'flex-start',
-        justifyContent: 'center'
+        justifyContent: 'center',
     },
     headerBackground: {
-        backgroundColor: '#ccc',
         flex: 1,
         resizeMode: 'cover',
         position: 'absolute',
@@ -46,44 +75,8 @@ const styles = StyleSheet.create({
     }
 });
 
-const userToken = getLocalString('token');
-const userDetail = jwtdecode(userToken);
+const mapStateToProps = state => ({
+    user: state.user
+});
 
-class DrawerMenu extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            ...userDetail
-        };
-    }
-
-    render() {
-        return (
-            <View>
-                <StatusBar
-                    barStyle="light-content"
-                    backgroundColor={STATUSBAR_APLIKASI}
-                />
-                <View
-                    style={styles.headerContainer}
-                >
-                    <Image
-                        source={require('../img/header_drawer.jpg')}
-                        style={styles.headerBackground}
-                    />
-                    <View style={styles.userInfoContainer}>
-                        <Image
-                            source={{uri: `http://10.0.2.2:3030/photo/thumbnail/${this.state.img}`}}
-                            style={styles.userProfile}
-                        />
-                        <Text style={styles.userName}>{this.state.nama}</Text>
-                        <Text style={styles.userMail}>{this.state.email}</Text>
-                    </View>
-                </View>
-                <DrawerItems {...this.props} />
-            </View>
-        );
-    }
-}
-
-export default DrawerMenu;
+export default connect(mapStateToProps)(DrawerMenu);
