@@ -7,7 +7,8 @@ import {
     SafeAreaView,
     TextInput,
     TouchableOpacity,
-    Alert, ToastAndroid
+    Alert, ToastAndroid,
+    Keyboard
 } from 'react-native';
 import {iniwisata_primary, iniwisata_primary_dark} from "../color";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -17,6 +18,7 @@ import {setLocalString} from "../realm/LocalString";
 import {connect} from 'react-redux';
 import {fetchDataUser} from "../redux/actions/user";
 import {WaveIndicator} from 'react-native-indicators';
+import {ProgressDialog} from 'react-native-simple-dialogs';
 
 class RegistrasiScreen extends React.Component {
     constructor(props) {
@@ -25,7 +27,9 @@ class RegistrasiScreen extends React.Component {
             email: this.props.navigation.state.params.email,
             password: this.props.navigation.state.params.password,
             nama: '',
-            photoProfile: null
+            photoProfile: null,
+            sendData: false,
+            loginUser: false
         }
     }
 
@@ -43,40 +47,45 @@ class RegistrasiScreen extends React.Component {
     }
 
     async _login() {
-        try {
-            const login = await axios.post('/iniwisata/login', {
-                email: this.state.email,
-                password: this.state.password
-            });
-            this.props.fetchDataUser(login.data.token);
-            if (!setLocalString('token', login.data.token)) throw error;
+        await this.setState({loginUser: true});
+        axios.post('/iniwisata/login', {email: this.state.email, password: this.state.password}).then(async res => {
+            const {data} = res;
+            if (!setLocalString('token', data.token)) throw error();
+            await this.props.fetchDataUser(data.token);
+            await this.setState({loginUser: false});
             this.props.navigation.navigate('AppDrawer');
             ToastAndroid.show('Selamat datang di INIWISATA', ToastAndroid.SHORT);
-        } catch (e) {
+        }).catch(error => {
             ToastAndroid.show('Login gagal', ToastAndroid.SHORT);
-        }
+        });
     }
 
     async _handleDaftar() {
-        try {
-            if (this.state.nama !== '') {
-                const response = await axios.post('/iniwisata/daftar', {...this.state});
-                if (response.data.status) {
-                    Alert.alert(
-                        'Sukses',
-                        'Pendaftaran akun berhasil dilakukan',
-                        [
-                            {text: 'OK', onPress: () => {this._login()}}
-                        ]
-                    );
-                } else {
-                    throw error();
-                }
+        if (this.state.nama !== '') {
+            await this.setState({sendData: true});
+            const response = await axios.post('/iniwisata/daftar', {...this.state});
+            if (response.data.status) {
+                await Keyboard.dismiss();
+                await this.setState({sendData: false});
+                Alert.alert(
+                    'Sukses',
+                    'Pendaftaran berhasil dilakukan',
+                    [
+                        {text: 'LOGIN', onPress: () => {this._login()}}
+                    ]
+                );
             } else {
-                throw error();
+                await this.setState({sendData: false});
+                ToastAndroid.show('Terdapat Kesalahan', ToastAndroid.SHORT);
             }
-        } catch (e) {
-            ToastAndroid.show('Pendaftaran gagal, harap isi field', ToastAndroid.SHORT);
+        } else {
+            Alert.alert(
+                'Form Kosong',
+                'Nama lengkap wajib diisi untuk mendaftar',
+                [
+                    {text: 'OK', onPress: () => {this.namaInput.focus()}}
+                ]
+            )
         }
     }
 
@@ -90,16 +99,25 @@ class RegistrasiScreen extends React.Component {
             const photoProfile = `data:${image.mime};base64,${image.data}`;
             this.setState({photoProfile});
         }).catch((e) => {
-            console.log(e);
+            ToastAndroid.show('Terjadi kesalahan', ToastAndroid.SHORT);
         });
     }
 
     render() {
+        console.log(this.state.nama);
         return (
             <SafeAreaView style={styles.container}>
                 <StatusBar
                     barStyle="dark-content"
                     backgroundColor="white"
+                />
+                <ProgressDialog
+                    visible={this.state.sendData}
+                    message="Mengirim pendaftaran..."
+                />
+                <ProgressDialog
+                    visible={this.state.loginUser}
+                    message="Sedang login..."
                 />
                 <View style={styles.formContainer}>
                     <View style={{flexDirection: 'row', marginBottom: 10}}>
@@ -135,12 +153,9 @@ class RegistrasiScreen extends React.Component {
 
                     <TextInput
                         style={styles.input}
-                        placeholder="Nama lengkap"
+                        placeholder="Masukan nama lengkap"
                         placeholderTextColor="rgba(0, 0, 0, 0.5)"
-                        returnKeyType="next"
-                        autoCapitalize="none"
-                        keyboardType="email-address"
-                        blurOnSubmit={false}
+                        returnKeyType="done"
                         onChangeText={nama => this.setState({nama})}
                         ref={input => this.namaInput = input}
                     />

@@ -11,7 +11,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {showLocalString} from "../realm/LocalString";
 import {SkypeIndicator, MaterialIndicator} from 'react-native-indicators';
 import {RadioGroup, RadioButton} from 'react-native-flexi-radio-button';
-import {ConfirmDialog} from 'react-native-simple-dialogs';
+import {ConfirmDialog, ProgressDialog} from 'react-native-simple-dialogs';
 import FilterDialog from "../components/FilterDialog";
 
 class BerandaScreen extends React.Component {
@@ -25,21 +25,41 @@ class BerandaScreen extends React.Component {
             filterHargaDari: 0,
             filterHargaSampai: 1000000,
             onLoadMore: false,
-            searchOpen: false
+            searchOpen: false,
+            searchWisata: false,
+            onRefresh: false,
+            onFiltering: false
         };
         this.props.fetchWisataPerpage('', 1, 0, 1000000);
         this.renderFooter = this.renderFooter.bind(this);
         this.filterOnChange = this.filterOnChange.bind(this);
     }
 
-    cariWisata(keyword) {
-        this.setState({
-            keyword,
+    async refreshList() {
+        await this.setState({onRefresh: true, searchOpen: false});
+        await this.setState({
+            keyword: '',
             page: 1,
             filterHargaDari: 0,
             filterHargaSampai: 1000000
         });
-        this.props.fetchCariWisata(keyword, 0, 1000000);
+        await this.props.fetchCariWisata(this.state.keyword, 0, 1000000);
+        this.setState({onRefresh: false});
+    }
+
+    async cariWisata() {
+        if (this.state.keyword !== '') {
+            await this.setState({searchWisata: true});
+            await this.setState({
+                page: 1,
+                filterHargaDari: 0,
+                filterHargaSampai: 1000000
+            });
+            await this.props.fetchCariWisata(this.state.keyword, 0, 1000000);
+            this.setState({searchWisata: false});
+        } else {
+            this.setState({searchOpen: false});
+        }
     }
 
     async loadMore() {
@@ -126,13 +146,14 @@ class BerandaScreen extends React.Component {
     }
 
     async sendFilter() {
-        this.setState({dialogVisible: false});
+        await this.setState({dialogVisible: false, onFiltering: true});
         await this.setState({page: 1});
         await this.props.fetchCariWisata(
             this.state.keyword,
             this.state.filterHargaDari,
             this.state.filterHargaSampai
         );
+        this.setState({onFiltering: false});
     }
 
     closeSearch() {
@@ -145,6 +166,14 @@ class BerandaScreen extends React.Component {
             <View style={{
                 flex: 1
             }}>
+                <ProgressDialog
+                    visible={this.state.searchWisata}
+                    message="Mencari wisata..."
+                />
+                <ProgressDialog
+                    visible={this.state.onFiltering}
+                    message="Filtering..."
+                />
                 <FilterDialog
                     valueNow={[this.state.filterHargaDari, this.state.filterHargaSampai]}
                     filterHargaSampaiVal={this.state.filterHargaSampai}
@@ -164,10 +193,11 @@ class BerandaScreen extends React.Component {
                     leftElement="menu"
                     centerElement="INIWISATA"
                     searchable={{
+                        onSubmitEditing: this.cariWisata.bind(this),
                         onSearchPressed: () => {this.setState({searchOpen: true})},
                         autoFocus: true,
                         placeholder: 'Cari tempat wisata',
-                        onChangeText: keyword => {this.cariWisata(keyword)}
+                        onChangeText: keyword => this.setState({keyword})
                     }}
                     onLeftElementPress={() => { this.props.navigation.openDrawer() }}
                 />
@@ -189,6 +219,8 @@ class BerandaScreen extends React.Component {
                             ListEmptyComponent={this.renderEmpty.bind(this)}
                             ListHeaderComponent={this.renderHeader}
                             ListFooterComponent={this.renderFooter}
+                            onRefresh={this.refreshList.bind(this)}
+                            refreshing={this.state.onRefresh}
                         />
                     )
                 }

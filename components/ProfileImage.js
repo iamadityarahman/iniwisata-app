@@ -7,10 +7,18 @@ import {connect} from 'react-redux';
 import axios from 'axios';
 import {getLocalString} from "../realm/LocalString";
 import {fetchDataUser} from "../redux/actions/user";
+import {ProgressDialog} from 'react-native-simple-dialogs';
 
 const TOKEN = getLocalString('token');
 
 class ProfileImage extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            saveDialog: false
+        }
+    }
+
     updateImage() {
         const {user} = this.props;
         ImagePicker.openPicker({
@@ -18,18 +26,24 @@ class ProfileImage extends React.Component {
             height: 500,
             cropping: true,
             includeBase64: true
-        }).then(image => {
-            axios.post('/iniwisata/user/profile/update/pic', {namafoto: user.namafoto, data: image.data}).then(res => {
-                const {data} = res;
-                if (data) {
-                    this.props.fetchDataUser(TOKEN);
-                    ToastAndroid.show('Photo diperbarui', ToastAndroid.SHORT);
-                } else {
-                    ToastAndroid.show('Photo gagal diperbarui', ToastAndroid.SHORT);
-                }
-            });
+        }).then(async image => {
+            if (image) {
+                await this.setState({saveDialog: true});
+                axios.post('/iniwisata/user/profile/update/pic', {namafoto: user.namafoto, data: image.data}).then(async res => {
+                    const {data} = res;
+                    if (data) {
+                        await this.props.fetchDataUser(TOKEN);
+                        await this.setState({saveDialog: false});
+                        ToastAndroid.show('Photo diperbarui', ToastAndroid.SHORT);
+                    } else {
+                        ToastAndroid.show('Photo gagal diperbarui', ToastAndroid.SHORT);
+                    }
+                });
+            } else {
+                throw error();
+            }
         }).catch((e) => {
-            console.log(e);
+            ToastAndroid.show('Terdapat kesalahan', ToastAndroid.SHORT);
         });
     }
 
@@ -37,6 +51,10 @@ class ProfileImage extends React.Component {
         const {user} = this.props;
         return (
             <View style={{alignItems: 'center'}}>
+                <ProgressDialog
+                    visible={this.state.saveDialog}
+                    message="Menyimpan perubahan..."
+                />
                 <Image
                     source={{uri: user.img}}
                     style={styles.imagePofile}

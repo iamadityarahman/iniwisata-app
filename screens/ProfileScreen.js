@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, TextInput, StyleSheet, ScrollView, Alert, Dimensions} from 'react-native';
+import {View, TextInput, StyleSheet, ScrollView, Alert, Dimensions, ToastAndroid} from 'react-native';
 import {iniwisata_primary_dark} from "../color";
 import {Button, Text} from 'native-base';
 import axios from 'axios';
@@ -8,6 +8,7 @@ import ProfileImage from "../components/ProfileImage";
 import {Toolbar} from "react-native-material-ui";
 import {getLocalString} from "../realm/LocalString";
 import {fetchDataUser} from "../redux/actions/user";
+import {ProgressDialog} from 'react-native-simple-dialogs';
 
 class ProfileScreen extends React.Component {
     constructor(props) {
@@ -16,11 +17,12 @@ class ProfileScreen extends React.Component {
             nama: '',
             email: '',
             passwordLama: '',
-            passwordBaru: ''
+            passwordBaru: '',
+            saveLoading: false
         };
     }
 
-    _kirimPerubahanData() {
+    async _kirimPerubahanData() {
         const {user} = this.props;
         const newData = {
             id: this.props.user.id,
@@ -29,14 +31,16 @@ class ProfileScreen extends React.Component {
             password: this.state.passwordLama
         };
 
-        axios.post('/iniwisata/user/profile/update/data', {...newData}).then(res => {
+        await this.setState({saveLoading: true});
+        axios.post('/iniwisata/user/profile/update/data', {...newData}).then(async res => {
             const {data} = res;
             if (data.affectedRows > 0) {
-                this.props.fetchDataUser();
-                alert('Data berhasil diperbarui');
-                this.refPasswordLama.clear();
-                this.setState({passwordLama: ''});
+                await this.props.fetchDataUser();
+                await this.refPasswordLama.clear();
+                await this.setState({passwordLama: '', saveLoading: false});
+                ToastAndroid.show('Data diperbarui', ToastAndroid.SHORT);
             } else {
+                await this.setState({saveLoading: false});
                 Alert.alert(
                     'Password salah',
                     'Password yang anda masukan salah',
@@ -48,17 +52,20 @@ class ProfileScreen extends React.Component {
         });
     }
 
-    _gantiPassword() {
+    async _gantiPassword() {
         const newPassword = {
             id: this.props.user.id,
             password_lama: this.state.passwordLama,
             password_baru: this.state.passwordBaru
         };
 
-        axios.post('/iniwisata/user/update/password', {...newPassword}).then(res => {
+        await this.setState({saveLoading: true});
+        axios.post('/iniwisata/user/update/password', {...newPassword}).then(async res => {
             const {data} = res;
+
+            await this.setState({saveLoading: false});
             if (data.changedRows > 0) {
-                alert('Password berhasil diperbarui');
+                ToastAndroid.show('Password diperbarui', ToastAndroid.SHORT);
                 this.props.navigation.navigate('Logout');
             } else {
                 Alert.alert(
@@ -72,7 +79,7 @@ class ProfileScreen extends React.Component {
         });
     }
 
-    _simpanPerubahanData() {
+    async _simpanPerubahanData() {
         if (this.state.passwordLama === '') {
             Alert.alert(
                 'Password Kosong',
@@ -113,6 +120,10 @@ class ProfileScreen extends React.Component {
                     leftElement="menu"
                     centerElement="PROFILE"
                     onLeftElementPress={() => {this.props.navigation.openDrawer()}}
+                />
+                <ProgressDialog
+                    visible={this.state.saveLoading}
+                    message="Menyimpan perubahan..."
                 />
                 <ScrollView>
                     <View style={styles.innerContainer}>
