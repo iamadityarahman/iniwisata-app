@@ -23,7 +23,6 @@ const styles = StyleSheet.create({
 
 const RatingWisata = (props) => (
     <View style={styles.ratingContainer}>
-        <IconFA name="circle" size={3} style={{marginHorizontal: 5}}/>
         <Text>{props.rating.toFixed(2)}&nbsp;</Text>
         <StarRating
             disabled={true}
@@ -55,20 +54,28 @@ class CardWisata extends React.Component {
                     marginTop: -10
                 }}/>
                 <CardContent>
-                    <View style={styles.contentContainer}>
+                    <View style={[styles.contentContainer, {marginBottom: 1}]}>
+                        <Text>{this.props.distance.distance.text}</Text>
+                        <IconFA name="circle" size={3} style={{marginHorizontal: 5}}/>
                         <Text>
                             {this.props.tiket_masuk == 0 ? 'Gratis' : `Rp. ${this.props.tiket_masuk.toLocaleString()}`}
                         </Text>
                         <IconFA name="circle" size={3} style={{marginHorizontal: 5}}/>
+                        {this.props.rating == null ? <RatingWisata rating={0}/> : <RatingWisata rating={this.props.rating}/>}
+                    </View>
+                    <Text style={{
+                        marginBottom: 1
+                    }}>
+                        <Text style={{fontWeight: 'bold'}}>Jam: </Text>
                         <Text style={{color: this.props.buka ? 'green' : 'red'}}>
                             {this.props.buka ? 'Buka' : 'Tutup'}&nbsp;
                         </Text>
-                        <Text>
-                            ({this.props.jam_buka.trim()})
-                        </Text>
-                        {this.props.rating == null ? <RatingWisata rating={0}/> : <RatingWisata rating={this.props.rating}/>}
-                    </View>
-                    <Text>{this.props.alamat}</Text>
+                        - ({this.props.jam_buka.trim()})
+                    </Text>
+                    <Text>
+                        <Text style={{fontWeight: 'bold'}}>Alamat: </Text>
+                        {this.props.alamat}
+                    </Text>
                 </CardContent>
                 <CardAction separator={true} inColumn={false}>
                     <CardButton

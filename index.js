@@ -6,8 +6,8 @@ import axios from 'axios';
 
 YellowBox.ignoreWarnings(['Remote debugger']);
 
-axios.defaults.baseURL = 'https://iniwisata.herokuapp.com/api';
-// axios.defaults.baseURL = 'http://10.0.2.2:3030/api';
+//axios.defaults.baseURL = 'https://iniwisata.herokuapp.com/api';
+axios.defaults.baseURL = 'http://10.0.2.2:3030/api';
 axios.defaults.headers = {
     token: REST_API_TOKEN
 };

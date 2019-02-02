@@ -7,55 +7,93 @@ import {fetchWisataPerpage, clearWisataList, fetchCariWisata} from "../redux/act
 import CardWisata from "../components/CardWisata";
 import {iniwisata_primary_dark, iniwisata_secondary_text} from "../color";
 import IconFA from 'react-native-vector-icons/FontAwesome';
-import Icon from 'react-native-vector-icons/Ionicons';
 import {showLocalString} from "../realm/LocalString";
 import {SkypeIndicator, MaterialIndicator} from 'react-native-indicators';
-import {RadioGroup, RadioButton} from 'react-native-flexi-radio-button';
-import {ConfirmDialog, ProgressDialog} from 'react-native-simple-dialogs';
-import FilterDialog from "../components/FilterDialog";
+import {ProgressDialog} from 'react-native-simple-dialogs';
+import {clearFilter} from "../redux/actions/filter";
 
 class BerandaScreen extends React.Component {
     constructor(props) {
         super(props);
+        const {filterHargaDari, filterHargaSampai, filterRating, filterJarak} = this.props.filter;
         this.state = {
-            keyword: '',
-            page: 1,
             dialogVisible: false,
-            filterRating: 0,
-            filterHargaDari: 0,
-            filterHargaSampai: 1000000,
             onLoadMore: false,
             searchOpen: false,
             searchWisata: false,
             onRefresh: false,
-            onFiltering: false
+            onFiltering: false,
+
+            myLoc: null,
+            keyword: '',
+            page: 1,
+            filterHargaDari,
+            filterHargaSampai,
+            filterRating,
+            filterJarak
         };
-        this.props.fetchWisataPerpage('', 1, 0, 1000000);
         this.renderFooter = this.renderFooter.bind(this);
-        this.filterOnChange = this.filterOnChange.bind(this);
+    }
+
+    componentWillMount() {
+        this.getMyLoc();
+    }
+
+    async getMyLoc() {
+        await navigator.geolocation.getCurrentPosition(
+            pos => {
+                const myLoc = `${pos.coords.latitude},${pos.coords.longitude}`;
+                this.setState({myLoc});
+                this.props.fetchWisataPerpage({
+                    myLoc,
+                    keyword: '',
+                    page: 1,
+                    filterHargaDari: 0,
+                    filterHargaSampai: 1000000,
+                    filterRating: 0,
+                    filterJarak: 0
+                });
+            },
+            err => {
+                console.log(err)
+            },
+            {enableHighAccuracy: true, timeout: 20000, maximumAge:10000}
+        );
+
     }
 
     async refreshList() {
+        const {myLoc, keyword, filterHargaDari, filterHargaSampai, filterRating, filterJarak} = this.state;
         await this.setState({onRefresh: true, searchOpen: false});
+        await this.props.clearFilter();
         await this.setState({
             keyword: '',
-            page: 1,
-            filterHargaDari: 0,
-            filterHargaSampai: 1000000
+            page: 1
         });
-        await this.props.fetchCariWisata(this.state.keyword, 0, 1000000);
+        await this.props.fetchCariWisata({
+            myLoc,
+            keyword: '',
+            filterHargaDari,
+            filterHargaSampai,
+            filterRating,
+            filterJarak
+        });
         this.setState({onRefresh: false});
     }
 
     async cariWisata() {
+        const {myLoc, keyword, filterHargaDari, filterHargaSampai, filterRating, filterJarak} = this.state;
         if (this.state.keyword !== '') {
             await this.setState({searchWisata: true});
-            await this.setState({
-                page: 1,
-                filterHargaDari: 0,
-                filterHargaSampai: 1000000
+            await this.setState({page: 1});
+            await this.props.fetchCariWisata({
+                myLoc,
+                keyword,
+                filterHargaDari,
+                filterHargaSampai,
+                filterRating,
+                filterJarak
             });
-            await this.props.fetchCariWisata(this.state.keyword, 0, 1000000);
             this.setState({searchWisata: false});
         } else {
             this.setState({searchOpen: false});
@@ -63,14 +101,19 @@ class BerandaScreen extends React.Component {
     }
 
     async loadMore() {
-        if (this.state.page < this.props.wisataList.total_page) {
+        const {totalPage} = this.props.wisataList;
+        const {myLoc, keyword, filterHargaDari, filterHargaSampai, filterRating, filterJarak} = this.state;
+        if (this.state.page < totalPage) {
             await this.setState({page: this.state.page + 1, onLoadMore: true});
-            await this.props.fetchWisataPerpage(
-                this.state.keyword,
-                this.state.page,
-                this.state.filterHargaDari,
-                this.state.filterHargaSampai
-            );
+            await this.props.fetchWisataPerpage({
+                myLoc,
+                keyword,
+                page: this.state.page,
+                filterHargaDari,
+                filterHargaSampai,
+                filterRating,
+                filterJarak
+            });
         }
     }
 
@@ -78,7 +121,7 @@ class BerandaScreen extends React.Component {
         return (
             <View
                 style={{
-                    height: 5
+                    height: 4
                 }}
             />
         );
@@ -137,25 +180,6 @@ class BerandaScreen extends React.Component {
         )
     }
 
-    filterOnChange(index, value) {
-        const {filterHargaDari, filterHargaSampai} = value;
-        this.setState({
-            filterHargaDari,
-            filterHargaSampai
-        });
-    }
-
-    async sendFilter() {
-        await this.setState({dialogVisible: false, onFiltering: true});
-        await this.setState({page: 1});
-        await this.props.fetchCariWisata(
-            this.state.keyword,
-            this.state.filterHargaDari,
-            this.state.filterHargaSampai
-        );
-        this.setState({onFiltering: false});
-    }
-
     closeSearch() {
         this.setState({searchOpen: false});
     }
@@ -173,20 +197,6 @@ class BerandaScreen extends React.Component {
                 <ProgressDialog
                     visible={this.state.onFiltering}
                     message="Filtering..."
-                />
-                <FilterDialog
-                    valueNow={[this.state.filterHargaDari, this.state.filterHargaSampai]}
-                    filterHargaSampaiVal={this.state.filterHargaSampai}
-                    visible={this.state.dialogVisible}
-                    positiveButton={{
-                        title: "OK",
-                        onPress: this.sendFilter.bind(this)
-                    }}
-                    negativeButton={{
-                        title: "Cancel",
-                        onPress: () => {this.setState({dialogVisible: false})}
-                    }}
-                    onSelect={(index, value) => this.filterOnChange(index, value)}
                 />
                 <Toolbar
                     isSearchActive={this.state.searchOpen}
@@ -226,7 +236,13 @@ class BerandaScreen extends React.Component {
                 }
                 <View>
                     <ActionButton
-                        onPress={() => this.setState({dialogVisible: true})}
+                        onPress={() => this.props.navigation.navigate({
+                            routeName: 'Filter',
+                            params: {
+                                keyword: this.state.keyword,
+                                myLoc: this.state.myLoc
+                            }
+                        })}
                         icon={<IconFA name="filter" color={iniwisata_secondary_text} size={25}/>}
                         style={{
                             container: {
@@ -259,14 +275,16 @@ const styles = StyleSheet.create({
 });
 
 const mapStateToProps = state => ({
+    filter: state.filter,
     wisataList: state.wisataList,
     user: state.user
 });
 
 const mapDispatchToProps = dispatch => ({
-    fetchWisataPerpage: (keyword, page, filterHargaDari, filterHargaSampai) => dispatch(fetchWisataPerpage(keyword, page, filterHargaDari, filterHargaSampai)),
+    clearFilter: () => dispatch(clearFilter()),
+    fetchWisataPerpage: (value) => dispatch(fetchWisataPerpage(value)),
     clearWisataList: () => dispatch(clearWisataList()),
-    fetchCariWisata: (keyword, filterHargaDari, filterHargaSampai) => dispatch(fetchCariWisata(keyword, filterHargaDari, filterHargaSampai))
+    fetchCariWisata: (value) => dispatch(fetchCariWisata(value))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(BerandaScreen);

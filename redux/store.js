@@ -3,11 +3,13 @@ import reduxThunk from 'redux-thunk';
 import {wisataList} from "./reducers/wisataList";
 import {wisataOpen} from "./reducers/wisataOpen";
 import {user} from "./reducers/user";
+import {filter} from "./reducers/filter";
 
 const reducers = combineReducers({
     wisataList,
     wisataOpen,
-    user
+    user,
+    filter
 });
 
 const configureStore = (initialState = {}) => {

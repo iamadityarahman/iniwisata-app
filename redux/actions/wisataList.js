@@ -4,10 +4,10 @@ export const ADDPERPAGE = 'ADDPERPAGE';
 export const CLEARALLWISATA = 'CLEARALLWISATA';
 export const SETLOADMORE = 'SETLOADMORE';
 
-export const addPerpage  = ({total_pencarian, total_page, data, page}) => ({
+export const addPerpage  = ({totalPencarian, totalPage, data, page}) => ({
     type: ADDPERPAGE,
-    total_pencarian,
-    total_page,
+    totalPencarian,
+    totalPage,
     data,
     page
 });
@@ -21,10 +21,18 @@ export const setLoadMore = kondisi => ({
     kondisi
 });
 
-export const fetchWisataPerpage = (keyword, page, filterHargaDari, filterHargaSampai) => async dispatch => {
+export const fetchWisataPerpage = ({myLoc, keyword, page, filterHargaDari, filterHargaSampai, filterRating, filterJarak}) => async dispatch => {
     try {
         await dispatch(setLoadMore(true));
-        const {data} = await axios.post('/iniwisata/wisata', {keyword, page, filterHargaDari, filterHargaSampai});
+        const {data} = await axios.post('/iniwisata/wisata', {
+            myLoc,
+            keyword,
+            page,
+            filterHargaDari,
+            filterHargaSampai,
+            filterRating,
+            filterJarak
+        });
         await dispatch(addPerpage(data));
         await dispatch(setLoadMore(false));
     } catch (e) {
@@ -32,9 +40,17 @@ export const fetchWisataPerpage = (keyword, page, filterHargaDari, filterHargaSa
     }
 };
 
-export const fetchCariWisata = (keyword, filterHargaDari, filterHargaSampai) => async dispatch => {
+export const fetchCariWisata = ({myLoc, keyword, filterHargaDari, filterHargaSampai, filterRating, filterJarak}) => async dispatch => {
     try {
-        const {data} = await axios.post('/iniwisata/wisata', {keyword, page: 1, filterHargaDari, filterHargaSampai});
+        const {data} = await axios.post('/iniwisata/wisata', {
+            myLoc,
+            keyword,
+            page: 1,
+            filterHargaDari,
+            filterHargaSampai,
+            filterRating,
+            filterJarak
+        });
         await dispatch(clearWisataList());
         await dispatch(addPerpage(data));
         await dispatch(setLoadMore(false));

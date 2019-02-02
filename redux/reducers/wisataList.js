@@ -3,9 +3,9 @@ import {ADDPERPAGE, CLEARALLWISATA, SETLOADMORE} from "../actions/wisataList";
 const initialState = {
     onLoadMore: false,
     isLoading: true,
-    total_pencarian: 0,
-    total_page: 0,
-    last_page: 0,
+    totalPencarian: 0,
+    totalPage: 0,
+    lastPage: 0,
     data: []
 };
 
@@ -21,9 +21,9 @@ export const wisataList = (state = initialState, action) => {
             return {
                 onLoadMore: true,
                 isLoading: false,
-                total_pencarian: action.total_pencarian,
-                total_page: action.total_page,
-                last_page: action.page,
+                totalPencarian: action.totalPencarian,
+                totalPage: action.totalPage,
+                lastPage: action.page,
                 data: [
                     ...state.data,
                     ...action.data

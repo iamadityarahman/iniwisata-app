@@ -23,6 +23,7 @@ import LogOutScreen from "./screens/LogOutScreen";
 import RegistrasiScreen from "./screens/RegistrasiScreen";
 import UlasanScreen from "./screens/UlasanScreen";
 import TambahUlasanScreen from "./screens/TambahUlasanScreen";
+import FilterScreen from "./screens/FilterScreen";
 
 export const detailBackAction = NavigationActions.back({
     key: 'listWisata'
@@ -65,7 +66,8 @@ const TabDetail = createBottomTabNavigator(
 const BerandaStack = createStackNavigator({
     Beranda: BerandaScreen,
     Detail: TabDetail,
-    TambahUlasan: TambahUlasanScreen
+    TambahUlasan: TambahUlasanScreen,
+    Filter: FilterScreen
 },{
     initialRouteName: 'Beranda',
     headerMode: 'none'
